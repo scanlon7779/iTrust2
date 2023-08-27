@@ -1,0 +1,83 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{})">
+<title>View Bill</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+
+		<script th:inline="javascript">
+		/* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+		/*<![CDATA[*/
+			var app = angular.module("viewBillApp", []);
+			app.controller('viewBillCtrl', function($scope, $http) {
+				$scope.pathname = window.location.pathname;
+				$scope.billId = $scope.pathname.substring($scope.pathname.lastIndexOf('/') + 1);
+
+				$scope.bill = {};
+				$scope.loadBill = function() {
+					$http.get("/iTrust2/api/v1/bills/" + $scope.billId).then(
+							function(response) {
+								$scope.bill = response.data; // or just response?
+								$scope.message = "";
+							}, function(rejection) {
+								$scope.codes = [];
+								$scope.message = "Could not display bill";
+							});
+				}
+				
+				$scope.click = function () {
+	                html2canvas(document.getElementById('billPage'), {
+	                    onrendered: function (canvas) {
+	                        var data = canvas.toDataURL();
+	                        var docDefinition = {
+	                            content: [{
+	                                image: data,
+	                                width: 500
+	                            }]
+	                        };
+	                        pdfMake.createPdf(docDefinition).download("Vaccination_Certificate.pdf");
+	                    }
+	                });
+	                setTimeout(() => {
+	                	location.reload();
+	                }, 2000);
+	            }
+				
+				// load table upon page loading
+				$scope.loadBill();
+			});
+			/*]]>*/
+		</script>
+
+		<div ng-app="viewBillApp" ng-controller="viewBillCtrl">
+			<!-- Info on tables from https://hello-angularjs.appspot.com/removetablerow -->
+			<h4 style="color: red" ng-model="message"></h4>
+
+			<div id="billPage">
+				<h1>Bill</h1>
+				<p><strong>Patient:</strong> {{bill.patient.username}}</p>
+				<p><strong>Office Visit Date:</strong> {{bill.date}}</p>
+				<p><strong>Attending Health Care Professional:</strong> {{bill.hcp.username}}</p>
+				<table class="table">
+					<tr>
+						<th>CPT Code</th>
+						<th>Description</th>
+						<th>Cost</th>
+					</tr>
+					<tr name="codeRow" ng-repeat="c in bill.cptCodes | orderBy: 'code'"
+						codeId={{c.id}}>
+						<td name="codeCell">{{c.code}}</td>
+						<td name="descriptionCell">{{c.description}}</td>
+						<td name="costCell">{{c.cost}}</td>
+					</tr>
+				</table>
+				
+				<p><strong>Total:</strong> {{bill.cost}}</p>
+				<p><strong>Bill Status:</strong> {{bill.status}}</p>
+			</div>
+			
+			<button class="btn btn-dark" ng-click="click()">Save to PDF</button>
+		</div>
+	</div>
+</body>
+</html>

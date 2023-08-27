@@ -1,0 +1,179 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{})">
+<title>Manage CPT Codes</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+
+		<script th:inline="javascript">
+		/* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+		/*<![CDATA[*/
+			var app = angular.module("manageCPTCodesApp", []);
+			app.controller('manageCPTCodesCtrl', function($scope, $http) {
+
+				$scope.codes = [];
+				$scope.loadTable = function() {
+					// get list of icd codes from rest api
+					$http.get("/iTrust2/api/v1/cptcode").then(
+							function(response) {
+								$scope.codes = response.data; // or just response?
+								$scope.message = "";
+								
+								$scope.editMode = false;
+								$scope.addMode = true;
+							}, function(rejection) {
+								$scope.codes = [];
+								$scope.message = "Could not display CPT Codes";
+							});
+				}
+				
+				// handle add code button click
+				$scope.addCode = function() {
+					if ($scope.code.description.length > 250) {
+						$scope.errorAdding = "Description exceeds character limit of 250";
+					} else if (/^[0-9]{5}$/.test($scope.code.code) == false) {
+						$scope.errorAdding = "Code doesn't meet specifications";
+					} else {
+						$http.post("/iTrust2/api/v1/cptcode/add", $scope.code).then(
+								function(response) {
+									$scope.loadTable();
+									$scope.code.code = "";
+									$scope.code.description = "";
+									$scope.code.cost = "";
+									$scope.errorAdding = "";
+								}, function(rejection) {
+									$scope.errorAdding = "Could not add code";
+								});
+					}
+					
+				}
+				
+				$scope.loadCode = function(code) {
+					$scope.editMode = true;
+					$scope.addMode = false;
+					
+					$scope.code = {};
+					$scope.code.id = code.id;
+					$scope.code.code = code.code;
+					$scope.code.description = code.description;
+					$scope.code.cost = code.cost;
+				}
+				
+				$scope.editCode = function() {
+					if ($scope.code.description.length > 250) {
+						$scope.errorAdding = "Description exceeds character limit of 250";
+					} else if (/^[0-9]{5}$/.test($scope.code.code) == false) {
+						$scope.errorAdding = "Code doesn't meet specifications";
+					} else {
+						$http.put("/iTrust2/api/v1/cptcode/" + $scope.code.code, $scope.code).then(
+								function(response) {
+									$scope.loadTable();
+									$scope.code.code = "";
+									$scope.code.description = "";
+									$scope.code.cost = "";
+									$scope.errorAdding = "";
+								}, function(rejection) {
+									$scope.errorAdding = "Could not add code";
+								});
+					}
+				}
+				
+				$scope.removeCode = function(code) {
+					$http.delete('/iTrust2/api/v1/cptcode/' + code.code).then(
+							function(response) {
+								$scope.loadTable();
+								$scope.message = "";
+							}, function(rejection) {
+								$scope.message = "Could not remove CPT code";
+							});
+				}
+				
+				// load table upon page loading
+				$scope.loadTable();
+			});
+			/*]]>*/
+		</script>
+
+		<div ng-app="manageCPTCodesApp" ng-controller="manageCPTCodesCtrl">
+			<!-- Info on tables from https://hello-angularjs.appspot.com/removetablerow -->
+			<h4 style="color: red" ng-model="message"></h4>
+
+			<h1>Manage CPT Codes</h1>
+			<table style="width: 100%">
+				<tr>
+					<td style="vertical-align: top">
+						<table class="table">
+							<tr>
+								<th>CPT Code</th>
+								<th>Description</th>
+								<th>Cost</th>
+								<th>Action</th>
+							</tr>
+							<tr name="codeRow" ng-repeat="c in codes | orderBy: 'code'"
+								codeId={{c.id}}>
+								<td name="codeCell">{{c.code}}</td>
+								<td name="descriptionCell">{{c.description}}</td>
+								<td name="costCell">{{c.cost}}</td>
+								<td>
+									<input type="button" value="Edit"
+									class="btn btn-primary" ng-click="loadCode(c)" />
+									<input type="button" value="Remove"
+									class="btn btn-primary" ng-click="removeCode(c)" />
+								</td>
+							</tr>
+						</table>
+						
+						<a href="cptcode/history">View Archived CPT Codes</a>
+					</td>
+
+					<td style="width: 35%; vertical-align: top">
+						<div style="padding: 0px 0px 20px 30px">
+							<h3>Add an CPT Code</h3>
+						</div>
+
+						<form class="form-horizontal" role="form" name="addCodeForm">
+							<div class="form-group" style="padding-left: 30px">
+								<label>CPT Code</label>
+								<input type="text" class="form-control" name="code"
+									ng-model="code.code" required />
+							</div>
+							<div class="form-group" style="padding-left: 30px">
+								<label>Description</label>
+								<textarea class="form-control" rows="5" name="description"
+									ng-model="code.description" required ng-minlength="1"></textarea>
+							</div>
+							<div class="form-group" style="padding-left: 30px">
+								<label>Cost</label>
+								<input type="number" class="form-control" name="cost"
+									ng-model="code.cost" required />
+							</div>
+							<div class="form-group" style="padding-left: 30px">
+								<input type="checkbox" id="restricted-archive" ng-model="code.archive"> 
+								<label for="restricted-archive">Archive?</label>
+							</div>
+
+							<div class="form-group" style="padding-left: 30px">
+								<div style="display: inline-block">
+									<button class="btn btn-primary" ng-class="{disabled : !editMode}"
+									name="edit" ng-click="editMode && editCode(addCodeForm.$valid)">Edit Code</button>
+									<!-- <input type="submit" value="Add Code" class="btn btn-primary"/>  -->
+								</div>
+								<div style="float: right">
+									<button class="btn btn-primary" ng-class="{disabled : !addMode}"
+									name="add" ng-click="addMode && addCode(addCodeForm.$valid)">Add Code</button>
+									<!-- <input type="submit" value="Add Code" class="btn btn-primary"/>  -->
+								</div>
+							</div>
+						</form>
+
+						<div>
+							<!-- <h4 style="color: red" ng-show="addCodeForm.$valid">Code doesn't meet specifications</h4>  -->
+							<p style="color: red" ng-model="errorAdding" id="errP">{{errorAdding}}</p>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

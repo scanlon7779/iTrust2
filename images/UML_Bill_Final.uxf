@@ -1,0 +1,169 @@
+<diagram program="umletino" version="14.3.0"><zoom_level>10</zoom_level><element><id>UMLPackage</id><coordinates><x>0</x><y>10</y><w>550</w><h>300</h></coordinates><panel_attributes>edu.ncsu.csc.iTrust2.controllers
+--
+bg=orange</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>570</x><y>0</y><w>490</w><h>380</h></coordinates><panel_attributes>edu.ncsu.csc.iTrust2.forms
+--
+bg=yellow</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>123</x><y>420</y><w>1020</w><h>370</h></coordinates><panel_attributes>edu.ncsu.iTrust2.models
+--
+bg=red
+
+group=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>123</x><y>970</y><w>610</w><h>160</h></coordinates><panel_attributes>edu.ncsu.iTrust2.services
+--
+bg=blue</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>10</x><y>40</y><w>260</w><h>190</h></coordinates><panel_attributes>APICPTCodeController
+--
+-cptCodeService: CPTCodeService
+-userService: UserService&lt;User&gt;
+-loggerUtil: LoggerUtil
+--
++createCPTCode(CPTCode): ResponseEntry
++editCPTCode(CPTCode): ResponseEntry
++deleteCPTCode(CPTCode): ResponseEntry
++getCPTCodes(): List&lt;CPTCode&gt;
++getCPTCode(id): ResponseEntry
++getCPTCodeHistory(): List&lt;CPTCode&gt;</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>130</x><y>450</y><w>210</w><h>210</h></coordinates><panel_attributes>CPTCode
+--
+-id: Long
+-code: Integer
+-cost: Integer
+-description: String
+-archive: boolean
+--
++CPTCode()
++getCode(): Integer
++setCode(Integer): void
++getCost(): Integer
++setCost(Integer): void
++getDescription(): String
++setDescription(String): void
+
+group=1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>350</x><y>450</y><w>260</w><h>290</h></coordinates><panel_attributes>OfficeVisit
+--
+-id: Long
+-patient: User
+-hcp: User
+-basicHealthMetrics: BasicHealthMetrics
+-satisfactionSurvey: SatisfactionSurvey
+-date: ZonedDateTime
+-type: AppointmentType
+-hospital: Hospital
+-diagnoses: List&lt;Diagnosis&gt;
+-notes: String
+-appointment: AppointmentRequest
+-prescriptions: List&lt;Prescription&gt;
+-cptCodes: List&lt;CPTCode&gt;
+-ophthalmologyMetrics: OphthalmologyMetrics
+--
++OfficeVisit()
++getCPTCodes(): List&lt;CPTCode&gt;
++setCPTCode(List&lt;CPTCode&gt;): void
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>620</x><y>450</y><w>210</w><h>200</h></coordinates><panel_attributes>VaccineVisit
+--
+-id: Long
+-patient: User
+-hcp: User
+-date: ZonedDateTime
+-followUpDate: ZonedDateTime
+-cptCode: CPTCode
+--
++VaccineVisit()
++getCPTCode():CPTCode
++setCPTCode(CPTCode): void</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>127</x><y>1000</y><w>290</w><h>120</h></coordinates><panel_attributes>CPTCodeService
+--
+-repository: CPTCodeRepository
+-userService: UserService&lt;User&gt;
+--
++getRepository(): JPARepository&lt;CPTCode, Long&gt;
++findCPTCode(Long): CPTCode
++findCPTCodesByArchive():List&lt;CPTCode&gt;
++findCPTCodeByNotArchive():List&lt;CPTCode&gt;
+
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>587</x><y>30</y><w>220</w><h>200</h></coordinates><panel_attributes>OfficeVisitForm
+--
+id: Long
+-patient: User
+-hcp: User
+-date: ZonedDateTime
+-type: AppointmentType
+-hospital: Hospital
+-notes: String
+-cptCodes:List&lt;CPTCode&gt;
+--
++OfficeVisitForm(OfficeVisit)
++getCPTCodes():List&lt;CPTCode&gt;
++setCPTCodes(List&lt;CPTCode&gt;): void</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>840</x><y>450</y><w>210</w><h>330</h></coordinates><panel_attributes>Bill
+--
+-id: Long
+-patient: User
+-hcp: User
+-date: ZonedDateTime
+-cptCodes: List&lt;CPTCode&gt;
+-status: String
+-total: Integer
+--
++Bill()
++getId(): Long
++setId(Long): void
++getPatient(): User
++setPatient(): User
++getHCP(): User
++setHCP(User): void
++getCPTCodes():List&lt;CPTCode&gt;
++setCPTCode(List&lt;CPTCode&gt;): void
++getStatus(): String
++setStatus(String): void
++getTotal():Integer
++setTotal(Integer): void
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>120</x><y>820</y><w>520</w><h>130</h></coordinates><panel_attributes>edu.ncsu.iTrust2.repositories
+--
+bg=green
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>127</x><y>850</y><w>210</w><h>70</h></coordinates><panel_attributes>CPTCodeRepository
+--
++findById(Long): CPTCode
++findByArchive(): List&lt;CPTCode&gt;
++findByNotArchive(): List&lt;CPTCode&gt;
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>357</x><y>850</y><w>210</w><h>70</h></coordinates><panel_attributes>BillRepository
+--
++findById(Long): Bill
++findByPatient(User): List&lt;Bill&gt;
++findAll(): List&lt;Bill&gt;
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>427</x><y>1000</y><w>290</w><h>120</h></coordinates><panel_attributes>BillService
+--
+-repository: BillRepository
+-userService: UserService&lt;User&gt;
+--
++getRepository(): JPARepository&lt;Bill, Long&gt;
++findBill(Long): Bill
++findByPatient(User):List&lt;Bill&gt;
++findAllBills():List&lt;Bill&gt;
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>817</x><y>30</y><w>220</w><h>330</h></coordinates><panel_attributes>BillForm
+--
+id: Long
+-patient: User
+-hcp: User
+-date: ZonedDateTime
+-cptCodes: List&lt;CPTCode&gt;
+-status: String
+-total: Integer
+--
++BillForm(Bill)
++getId(): Long
++setId(Long): void
++getPatient(): User
++setPatient(): User
++getHCP(): User
++setHCP(User): void
++getCPTCodes():List&lt;CPTCode&gt;
++setCPTCode(List&lt;CPTCode&gt;): void
++getStatus(): String
++setStatus(String): void
++getTotal():Integer
++setTotal(Integer): void</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>280</x><y>40</y><w>260</w><h>150</h></coordinates><panel_attributes>APIBillController
+--
+-billService: BillService
+-userService: UserService&lt;User&gt;
+-loggerUtil: LoggerUtil
+--
++createBill(Bill): ResponseEntry
++editBill(Bill): ResponseEntry
++getBills(): List&lt;Bill&gt;
++getBill(id): ResponseEntry
++getBillsByPatient(User):List&lt;Bills&gt;</panel_attributes><additional_attributes></additional_attributes></element></diagram>

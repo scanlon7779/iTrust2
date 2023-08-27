@@ -1,0 +1,58 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{})">
+<title>Patient Bills</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+
+		<script th:inline="javascript">
+		/* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+		/*<![CDATA[*/
+			var app = angular.module("viewBillsApp", []);
+			app.controller('viewBillsCtrl', function($scope, $http) {
+
+				$scope.bills = [];
+				$scope.loadTable = function() {
+					// get list of icd codes from rest api
+					$http.get("/iTrust2/api/v1/bills/patient").then(
+							function(response) {
+								$scope.bills = response.data; // or just response?
+								$scope.message = "";
+							}, function(rejection) {
+								$scope.bills = [];
+								$scope.message = "Could not display bills";
+							});
+				}
+				
+				// load table upon page loading
+				$scope.loadTable();
+			});
+			/*]]>*/
+		</script>
+
+		<div ng-app="viewBillsApp" ng-controller="viewBillsCtrl">
+			<!-- Info on tables from https://hello-angularjs.appspot.com/removetablerow -->
+			<h4 style="color: red" ng-model="message"></h4>
+
+			<h1>Patient Bills</h1>
+			<table class="table">
+				<tr>
+					<th>Bill Number</th>
+					<th>Status</th>
+					<th>Cost</th>
+					<th>View</th>
+				</tr>
+				<tr name="billRow" ng-repeat="b in bills | orderBy: 'id'"
+					codeId={{b.id}}>
+					<td name="idCell">{{b.id}}</td>
+					<td name="statusCell">{{b.status}}</td>
+					<td name="costCell">{{b.cost}}</td>
+					<td>
+						<a class="btn btn-primary" href="{{'bills/' + b.id}}">View</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

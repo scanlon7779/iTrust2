@@ -1,0 +1,54 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{})">
+<title>View Archived CPT Codes</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+
+		<script th:inline="javascript">
+		/* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+		/*<![CDATA[*/
+			var app = angular.module("viewArchivedCPTCodesApp", []);
+			app.controller('viewArchivedCPTCodesCtrl', function($scope, $http) {
+
+				$scope.codes = [];
+				$scope.loadTable = function() {
+					// get list of icd codes from rest api
+					$http.get("/iTrust2/api/v1/cptcode/history").then(
+							function(response) {
+								$scope.codes = response.data; // or just response?
+								$scope.message = "";
+							}, function(rejection) {
+								$scope.codes = [];
+								$scope.message = "Could not display CPT Codes";
+							});
+				}
+				
+				// load table upon page loading
+				$scope.loadTable();
+			});
+			/*]]>*/
+		</script>
+
+		<div ng-app="viewArchivedCPTCodesApp" ng-controller="viewArchivedCPTCodesCtrl">
+			<!-- Info on tables from https://hello-angularjs.appspot.com/removetablerow -->
+			<h4 style="color: red" ng-model="message"></h4>
+
+			<h1>View Archived CPT Codes</h1>
+			<table class="table">
+				<tr>
+					<th>CPT Code</th>
+					<th>Description</th>
+					<th>Cost</th>
+				</tr>
+				<tr name="codeRow" ng-repeat="c in codes | orderBy: 'code'"
+					codeId={{c.id}}>
+					<td name="codeCell">{{c.code}}</td>
+					<td name="descriptionCell">{{c.description}}</td>
+					<td name="costCell">{{c.cost}}</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

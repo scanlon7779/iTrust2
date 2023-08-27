@@ -1,0 +1,106 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{})">
+<title>Patient Bills</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+
+		<script th:inline="javascript">
+		/* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+		/*<![CDATA[*/
+			var app = angular.module("payBillApp", []);
+		
+			// Adapated from Angular UI
+			app.filter('unique', function () {
+			  return function (items, filterOn) {
+			    if (filterOn === false) {
+			      return items;
+			    }
+	
+			    if ((filterOn || angular.isUndefined(filterOn)) && angular.isArray(items)) {
+			      var hashCheck = {}, newItems = [];
+	
+			      var extractValueToCompare = function (item) {
+			        if (angular.isObject(item) && angular.isString(filterOn)) {
+			          return item[filterOn];
+			        } else {
+			          return item;
+			        }
+			      };
+	
+			      angular.forEach(items, function (item) {
+			        var valueToCheck, isDuplicate = false;
+	
+			        for (var i = 0; i < newItems.length; i++) {
+			          if (angular.equals(extractValueToCompare(newItems[i]), extractValueToCompare(item))) {
+			            isDuplicate = true;
+			            break;
+			          }
+			        }
+			        if (!isDuplicate) {
+			          newItems.push(item);
+			        }
+	
+			      });
+			      items = newItems;
+			    }
+			    return items;
+			  };
+			});
+		
+			app.controller('payBillCtrl', function($scope, $http) {
+				$scope.bills = [];
+				$scope.loadTable = function() {
+					// get list of icd codes from rest api
+					$http.get("/iTrust2/api/v1/bills/").then(
+							function(response) {
+								$scope.bills = response.data; // or just response?
+								$scope.message = "";
+							}, function(rejection) {
+								$scope.bills = [];
+								$scope.message = "Could not display bills";
+							});
+				}
+				
+				// load table upon page loading
+				$scope.loadTable();
+			});
+			/*]]>*/
+		</script>
+
+		<div ng-app="payBillApp" ng-controller="payBillCtrl">
+			<!-- Info on tables from https://hello-angularjs.appspot.com/removetablerow -->
+			<h4 style="color: red" ng-model="message"></h4>
+
+			<h1>Bill List</h1>
+			<div class="form-inline">
+				<label><strong>Select Patient:</strong></label>
+				<select class="form-control" ng-model="selectedPatient"
+					ng-options="b.patient.username for b in bills | unique: 'patient'">
+					<option value="">All</option>
+				</select>
+			</div>
+			
+			<table class="table">
+				<tr>
+					<th>Bill Number</th>
+					<th>Patient</th>
+					<th>Status</th>
+					<th>Cost</th>
+					<th>View</th>
+				</tr>
+				<tr name="billRow" ng-repeat="b in bills | orderBy: 'id' | filter: {patient: {username: selectedPatient.patient.username} }"
+					codeId={{b.id}}>
+					<td name="idCell">{{b.id}}</td>
+					<td name="patientCell">{{b.patient.username}}</td>
+					<td name="statusCell">{{b.status}}</td>
+					<td name="costCell">{{b.cost}}</td>
+					<td>
+						<a class="btn btn-primary" href="{{'bills/' + b.id}}">View</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

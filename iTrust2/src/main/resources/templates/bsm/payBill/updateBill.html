@@ -1,0 +1,121 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{})">
+<title>Patient Bills</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+
+		<script th:inline="javascript">
+		/* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+		/*<![CDATA[*/
+			var app = angular.module("payBillApp", []);
+			app.controller('payBillCtrl', function($scope, $http) {
+				$scope.pathname = window.location.pathname;
+				$scope.billId = $scope.pathname.substring($scope.pathname.lastIndexOf('/') + 1);
+
+				$scope.bill = {};
+				$scope.loadBill = function() {
+					$http.get("/iTrust2/api/v1/bills/" + $scope.billId).then(
+							function(response) {
+								$scope.bill = response.data; // or just response?
+								$scope.message = "";
+							}, function(rejection) {
+								$scope.bill = [];
+								$scope.message = "Could not get bill";
+							});
+				}
+				
+				$scope.payBill = function() {
+					$scope.payment.patient = $scope.bill.patient;
+					
+					$http.put("/iTrust2/api/v1/bills/pay/" + $scope.billId, $scope.payment).then(
+							function(response) {
+								$scope.loadBill();
+								$scope.successMessage = "Successfully updated bill";
+								$scope.payment.type = null;
+								$scope.payment.amount = null;
+							}, function(rejection) {
+								$scope.errorAdding = "Could not edit bill";
+							});
+				}
+				
+				// load table upon page loading
+				$scope.loadBill();
+			});
+			/*]]>*/
+		</script>
+
+		<div ng-app="payBillApp" ng-controller="payBillCtrl">
+			<!-- Info on tables from https://hello-angularjs.appspot.com/removetablerow -->
+			<h4 style="color: red" ng-model="message"></h4>
+			
+			<h1>Pay Bill</h1>
+			<table style="width: 100%">
+				<tr>
+					<td style="vertical-align: top">
+						<h3>Current Bill</h3>
+						
+						<p><strong>Patient:</strong> {{bill.patient.username}}</p>
+						<p><strong>Office Visit Date:</strong> {{bill.date}}</p>
+						<p><strong>Attending Health Care Professional:</strong> {{bill.hcp.username}}</p>
+						<table class="table">
+							<tr>
+								<th>CPT Code</th>
+								<th>Description</th>
+								<th>Cost</th>
+							</tr>
+							<tr name="codeRow" ng-repeat="c in bill.cptCodes | orderBy: 'code'"
+								codeId={{c.id}}>
+								<td name="codeCell">{{c.code}}</td>
+								<td name="descriptionCell">{{c.description}}</td>
+								<td name="costCell">{{c.cost}}</td>
+							</tr>
+						</table>
+						
+						<p><strong>Total:</strong> {{bill.cost}}</p>
+						<p><strong>Bill Status:</strong> {{bill.status}}</p>
+					</td>
+
+					<td style="width: 50%; vertical-align: top">
+						<h3>Update Bill</h3>
+			
+						<form class="form-horizontal" role="form" name="payBillForm">
+							<div class="form-group row" style="padding-left: 30px">
+								<label class="col-md-2 col-form-label">Payment Type</label>
+								<div class="col-md-10">
+									<select class="form-control" ng-model="payment.type" required>
+										<option value="cash">Cash</option>
+										<option value="check">Check</option>
+										<option value="creditCard">Credit Card</option>
+										<option value="insurance">Insurance</option>
+									</select>
+								</div>
+							</div>
+						
+							<div class="form-group row" style="padding-left: 30px">
+								<label class="col-md-2 col-form-label">Amount</label>
+								<div class="col-md-10">
+									<input type="number" class="form-control" name="amount"
+										ng-model="payment.amount" required />
+								</div>
+							</div>
+			
+							<div class="form-group" style="padding-left: 40px">
+								<button class="btn btn-primary" name="submit"
+								ng-click="payBill(payBillForm.$valid)">Submit</button>
+								<!-- <input type="submit" value="Add Code" class="btn btn-primary"/>  -->
+							</div>
+						</form>
+			
+						<div>
+							<!-- <h4 style="color: red" ng-show="addCodeForm.$valid">Code doesn't meet specifications</h4>  -->
+							<p style="color: green" ng-model="successMessage" id="successP">{{successMessage}}</p>
+							<p style="color: red" ng-model="errorAdding" id="errP">{{errorAdding}}</p>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</body>
+</html>
